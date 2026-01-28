@@ -17,7 +17,8 @@ def show_old_vs_new(
     people: List[str],
     days: Dict[int, Dict[int, DevDay]],
 ) -> None:
-    from scipy.signal import convolve, slepian
+    from scipy.signal import convolve
+    from scipy.signal.windows import dpss
 
     start_date = datetime.fromtimestamp(start_date)
     start_date = datetime(start_date.year, start_date.month, start_date.day)
@@ -30,7 +31,7 @@ def show_old_vs_new(
             new_lines[day] += stats.Added
             old_lines[day] += stats.Removed + stats.Changed
     resolution = 32
-    window = slepian(max(len(new_lines) // resolution, 1), 0.5)
+    window = dpss(max(len(new_lines) // resolution, 1), 0.5, 1)[0]
     new_lines = convolve(new_lines, window, "same")
     old_lines = convolve(old_lines, window, "same")
     matplotlib, pyplot = import_pyplot(args.backend, args.style)
@@ -40,10 +41,10 @@ def show_old_vs_new(
         plot_x, old_lines, color="#E14C35", label="Changed existing lines"
     )
     pyplot.legend(loc=2, fontsize=args.font_size)
-    for tick in chain(
-        pyplot.gca().xaxis.get_major_ticks(), pyplot.gca().yaxis.get_major_ticks()
+    for label in chain(
+        pyplot.gca().xaxis.get_ticklabels(), pyplot.gca().yaxis.get_ticklabels()
     ):
-        tick.label.set_fontsize(args.font_size)
+        label.set_fontsize(args.font_size)
     if args.mode == "all" and args.output:
         output = get_plot_path(args.output, "old_vs_new")
     else:

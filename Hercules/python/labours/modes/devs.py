@@ -21,7 +21,8 @@ def show_devs(
     days: Dict[int, Dict[int, DevDay]],
     max_people: int = 50,
 ) -> None:
-    from scipy.signal import convolve, slepian
+    from scipy.signal import convolve
+    from scipy.signal.windows import dpss
 
     if len(people) > max_people:
         print("Picking top %s developers by commit count" % max_people)
@@ -49,7 +50,7 @@ def show_devs(
     size = (end_date - start_date).days + 1
     plot_x = [start_date + timedelta(days=i) for i in range(size)]
     resolution = 64
-    window = slepian(size // resolution, 0.5)
+    window = dpss(size // resolution, 0.5, 1)[0]
     final = numpy.zeros((len(devseries), size), dtype=numpy.float32)
     for i, s in enumerate(devseries.values()):
         arr = numpy.array(s).transpose()
@@ -141,8 +142,8 @@ def show_devs(
             matplotlib.dates.MonthLocator(interval=interval)
         )
         axes[-1].xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%Y-%m"))
-    for tick in axes[-1].xaxis.get_major_ticks():
-        tick.label.set_fontsize(args.font_size)
+    for label in axes[-1].xaxis.get_ticklabels():
+        label.set_fontsize(args.font_size)
     axes[-1].spines["left"].set_visible(False)
     axes[-1].spines["right"].set_visible(False)
     axes[-1].spines["top"].set_visible(False)
@@ -247,7 +248,8 @@ def show_devs_efforts(
     days: Dict[int, Dict[int, DevDay]],
     max_people: int,
 ) -> None:
-    from scipy.signal import convolve, slepian
+    from scipy.signal import convolve
+    from scipy.signal.windows import dpss
 
     start_date = datetime.fromtimestamp(start_date)
     start_date = datetime(start_date.year, start_date.month, start_date.day)
@@ -280,7 +282,7 @@ def show_devs_efforts(
                 dev = chosen_order.get(dev, len(chosen_order))
                 efforts[dev][day] += stats.Added + stats.Removed + stats.Changed
     efforts_cum = numpy.cumsum(efforts, axis=1)
-    window = slepian(10, 0.5)
+    window = dpss(10, 0.5, 1)[0]
     window /= window.sum()
     for e in (efforts, efforts_cum):
         for i in range(e.shape[0]):
@@ -302,9 +304,9 @@ def show_devs_efforts(
     if len(polys) == max_people + 1:
         polys[-1].set_hatch("/")
     yticks = []
-    for tick in pyplot.gca().yaxis.iter_ticks():
-        if tick[1] >= 0:
-            yticks.append(tick[1])
+    for tick_loc in pyplot.gca().yaxis.get_ticklocs():
+        if tick_loc >= 0:
+            yticks.append(tick_loc)
     pyplot.gca().yaxis.set_ticks(yticks)
     legend = pyplot.legend(loc=2, ncol=2, fontsize=args.font_size)
     apply_plot_style(

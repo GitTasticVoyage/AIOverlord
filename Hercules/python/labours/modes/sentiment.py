@@ -7,7 +7,8 @@ from labours.utils import parse_date
 
 
 def show_sentiment_stats(args, name, resample, start_date, data):
-    from scipy.signal import convolve, slepian
+    from scipy.signal import convolve
+    from scipy.signal.windows import dpss
 
     matplotlib, pyplot = import_pyplot(args.backend, args.style)
 
@@ -20,7 +21,7 @@ def show_sentiment_stats(args, name, resample, start_date, data):
     for d, val in data:
         mood[d] = (0.5 - val.Value) * 2
     resolution = 32
-    window = slepian(len(timeline) // resolution, 0.5)
+    window = dpss(len(timeline) // resolution, 0.5, 1)[0]
     window /= window.sum()
     mood_smooth = convolve(mood, window, "same")
     pos = mood_smooth.copy()
