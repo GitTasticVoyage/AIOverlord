@@ -1,0 +1,46 @@
+vendor
+cmd/hercules/plugin_template_source.go
+contrib/_plugin_example/churn_analysis.pb.go
+pb/pb.pb.go
+pb/pb_pb2.py
+coverage.txt
+protoc-gen-gogo
+hercules
+python/dist
+python/build
+
+**/*.egg-info
+**/__pycache__
+**/.DS_Store
+.idea
+
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_obj
+_test
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go
+
+*.exe
+*.test
+*.prof
+
+*.tsv
+*.tsv.gz
+*.json
+
+**/__pycache__
