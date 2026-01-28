@@ -161,7 +161,8 @@ def print_survival_function(kmf: 'KaplanMeierFitter', sampling: int) -> None:
     sf.index = [timedelta(days=d) for d in sf.index * sampling]
     sf.columns = ["Ratio of survived lines"]
     try:
-        print(sf[len(sf) // 6 :: len(sf) // 6].append(sf.tail(1)))
+        pandas = import_pandas()
+        print(pandas.concat([sf[len(sf) // 6 :: len(sf) // 6], sf.tail(1)]))
     except ValueError:
         pass
 

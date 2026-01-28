@@ -11,10 +11,12 @@ try:
 except FileNotFoundError:
     long_description = ""
 
+# Use requirements.txt instead which has pre-resolved versions
 with open(
-    os.path.join(os.path.dirname(__file__), "requirements.in"), encoding="utf-8"
+    os.path.join(os.path.dirname(__file__), "requirements.txt"), encoding="utf-8"
 ) as f:
-    requirements = f.readlines()
+    requirements = [line.strip() for line in f.readlines() 
+                   if line.strip() and not line.startswith("#")]
 
 
 setup(
@@ -33,12 +35,13 @@ setup(
     install_requires=requirements,
     package_data={"labours": ["../LICENSE.md", "../README.md", "../requirements.txt"]},
     entry_points={"console_scripts": ["labours=labours.__main__:main"]},
-    python_requires=">=3.9",
+    python_requires=">=3.8",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Environment :: Console",
         "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

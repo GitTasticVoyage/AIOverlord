@@ -55,7 +55,9 @@ def deploy_plot(title: str, output: str, background: str, tight: bool = True) ->
     import matplotlib.pyplot as pyplot
 
     if not output:
-        pyplot.gcf().canvas.set_window_title(title)
+        fig = pyplot.gcf()
+        if title:
+            fig.suptitle(title)
         pyplot.show()
     else:
         po = Path(output)
