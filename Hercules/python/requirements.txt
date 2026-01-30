@@ -6,14 +6,14 @@
 #
 # Updated for Python 3.12 compatibility
 cycler==0.12.1
-# fastdtw==0.3.4  # No Python 3.14 wheels
+fastdtw==0.3.4
 kiwisolver==1.4.5
 lifelines==0.30.0
 matplotlib==3.8.2
 munch==2.5.0
 numpy==1.26.3
 packaging==24.0
-pandas==3.0.0
+pandas==2.2.0
 protobuf==4.25.1
 pyparsing==3.1.1
 python-dateutil==2.8.2

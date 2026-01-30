@@ -430,6 +430,14 @@ func (ra *RenameAnalysis) blobsAreClose(blob1 *CachedBlob, blob2 *CachedBlob) (b
 		return 100-delta >= ra.SimilarityThreshold, nil
 	}
 	src, dst := string(blob1.Data), string(blob2.Data)
+	// Validate UTF-8 - treat invalid UTF-8 as binary
+	if !utf8.ValidString(src) || !utf8.ValidString(dst) {
+		bsdifflen := DiffBytes(blob1.Data, blob2.Data)
+		delta := int((int64(bsdifflen) * 100) / internal.Max64(
+			internal.Min64(blob1.Size, blob2.Size), 1))
+		cleanReturn = true
+		return 100-delta >= ra.SimilarityThreshold, nil
+	}
 	maxSize := internal.Max(1, internal.Max(utf8.RuneCountInString(src), utf8.RuneCountInString(dst)))
 
 	// compute the line-by-line diff, then the char-level diffs of the del-ins blocks
