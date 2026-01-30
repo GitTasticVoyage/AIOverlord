@@ -1,6 +1,6 @@
 matplotlib>=3.8,<4.0
 numpy>=1.26,<2.0
-pandas>=2.0,<3.0
+pandas>=2.2,<3.0
 PyYAML>=6.0,<7.0
 protobuf>=4.20,<5.0
 scipy>=1.14,<2.0
