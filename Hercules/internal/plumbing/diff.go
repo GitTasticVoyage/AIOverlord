@@ -149,18 +149,38 @@ func (diff *FileDiff) Consume(deps map[string]interface{}) (map[string]interface
 			// we are not validating UTF-8 here because for example
 			// git/git 4f7770c87ce3c302e1639a7737a6d2531fe4b160 fetch-pack.c is invalid UTF-8
 			strFrom, strTo := string(blobFrom.Data), string(blobTo.Data)
-			dmp := diffmatchpatch.New()
-			dmp.DiffTimeout = diff.Timeout
-			src, dst, _ := dmp.DiffLinesToRunes(stripWhitespace(strFrom, diff.WhitespaceIgnore), stripWhitespace(strTo, diff.WhitespaceIgnore))
-			diffs := dmp.DiffMainRunes(src, dst, false)
-			if !diff.CleanupDisabled {
-				diffs = dmp.DiffCleanupMerge(dmp.DiffCleanupSemanticLossless(diffs))
+
+			// Skip very large files to avoid go-diff panics
+			maxSize := len(strFrom)
+			if len(strTo) > maxSize {
+				maxSize = len(strTo)
 			}
-			result[change.To.Name] = FileDiffData{
-				OldLinesOfCode: len(src),
-				NewLinesOfCode: len(dst),
-				Diffs:          diffs,
+			if maxSize > 10000000 { // Skip files > 10MB
+				diff.l.Warnf("Skipping diff for large file %s (%d bytes)", change.To.Name, maxSize)
+				continue
 			}
+
+			// Panic recovery for pathological diff cases
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						diff.l.Warnf("go-diff panic recovered for %s: %v", change.To.Name, r)
+					}
+				}()
+
+				dmp := diffmatchpatch.New()
+				dmp.DiffTimeout = diff.Timeout
+				src, dst, _ := dmp.DiffLinesToRunes(stripWhitespace(strFrom, diff.WhitespaceIgnore), stripWhitespace(strTo, diff.WhitespaceIgnore))
+				diffs := dmp.DiffMainRunes(src, dst, false)
+				if !diff.CleanupDisabled {
+					diffs = dmp.DiffCleanupMerge(dmp.DiffCleanupSemanticLossless(diffs))
+				}
+				result[change.To.Name] = FileDiffData{
+					OldLinesOfCode: len(src),
+					NewLinesOfCode: len(dst),
+					Diffs:          diffs,
+				}
+			}()
 		default:
 			continue
 		}
