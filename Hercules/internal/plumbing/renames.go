@@ -438,7 +438,25 @@ func (ra *RenameAnalysis) blobsAreClose(blob1 *CachedBlob, blob2 *CachedBlob) (b
 		cleanReturn = true
 		return 100-delta >= ra.SimilarityThreshold, nil
 	}
+
+	// Skip diff for very large files to avoid go-diff panics
 	maxSize := internal.Max(1, internal.Max(utf8.RuneCountInString(src), utf8.RuneCountInString(dst)))
+	if maxSize > 1000000 { // Skip files > ~1MB worth of runes
+		bsdifflen := DiffBytes(blob1.Data, blob2.Data)
+		delta := int((int64(bsdifflen) * 100) / internal.Max64(
+			internal.Min64(blob1.Size, blob2.Size), 1))
+		cleanReturn = true
+		return 100-delta >= ra.SimilarityThreshold, nil
+	}
+
+	// Wrap diff in panic recovery - go-diff can panic on pathological inputs
+	defer func() {
+		if r := recover(); r != nil {
+			ra.l.Warnf("go-diff panic recovered for blobs %s and %s: %v",
+				blob1.Hash.String(), blob2.Hash.String(), r)
+			cleanReturn = false
+		}
+	}()
 
 	// compute the line-by-line diff, then the char-level diffs of the del-ins blocks
 	// yes, this algorithm is greedy and not exact
